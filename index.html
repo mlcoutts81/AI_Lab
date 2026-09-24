@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Partner: Prompting Lab</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Basic reset and font setup to match the original app */
+        body { margin: 0; padding: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, createContext, useContext } = React;
+
+        // --- SVG Icon Components (Replacing lucide-react for standalone browser compatibility) ---
+        const Icon = ({ children, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
+        );
+
+        const BookOpen = (p) => <Icon {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></Icon>;
+        const Cpu = (p) => <Icon {...p}><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></Icon>;
+        const MessageSquareText = (p) => <Icon {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></Icon>;
+        const Lightbulb = (p) => <Icon {...p}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></Icon>;
+        const ArrowRight = (p) => <Icon {...p}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></Icon>;
+        const SplitSquareHorizontal = (p) => <Icon {...p}><path d="M8 19H5c-1 0-2-1-2-2V7c0-1 1-2 2-2h3"/><path d="M16 5h3c1 0 2 1 2 2v10c0 1-1 2-2 2h-3"/><line x1="12" x2="12" y1="4" y2="20"/></Icon>;
+        const Target = (p) => <Icon {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></Icon>;
+        const Sparkles = (p) => <Icon {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></Icon>;
+        const Info = (p) => <Icon {...p}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></Icon>;
+        const GraduationCap = (p) => <Icon {...p}><path d="M21.42 10.922a2 2 0 0 0-.019-3.838L12.83 4.47a2 2 0 0 0-1.66 0L2.6 7.08a2 2 0 0 0 0 3.84l9.36 4.15a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></Icon>;
+        const RotateCcw = (p) => <Icon {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Icon>;
+
+        // Educational content mapped to different age groups
+        const CONTENT_LEVELS = {
+            primary: {
+                label: "Ages 8-11 (Primary)",
+                tokenization: {
+                title: "How AI 'Reads' Words",
+                desc: "AI doesn't read like we do! It chops your sentences into tiny pieces called 'tokens'. A token might be a whole word, part of a word, or even just a space.",
+                placeholder: "Type a fun sentence here..."
+                },
+                probability: {
+                title: "How AI 'Guesses' Next",
+                desc: "AI is like a super-smart guessing machine. It looks at the words you typed and guesses which word should come next based on what it has seen in books and websites.",
+                scenarios: ["The quick brown", "Once upon a", "My favourite animal is"]
+                },
+                prompting: {
+                title: "Prompt Playground",
+                desc: "A 'prompt' is the instruction you give the AI. The clearer you are, the better the answer! Try giving the AI a job and a topic.",
+                roles: [
+                    { value: "helpful assistant", label: "Helpful Assistant" },
+                    { value: "pirate captain", label: "Pirate Captain" },
+                    { value: "storyteller", label: "Storyteller" }
+                ],
+                formats: [
+                    { value: "a short paragraph", label: "A Short Paragraph" },
+                    { value: "3 bullet points", label: "3 Bullet Points" },
+                    { value: "a funny poem", label: "A Funny Poem" }
+                ]
+                }
+            },
+            secondary: {
+                label: "Ages 12-15 (Secondary)",
+                tokenization: {
+                title: "Text Tokenization",
+                desc: "Language models process text by breaking it down into 'tokens'. These can be words, sub-words, or punctuation. Understanding tokens helps you understand the AI's processing limits.",
+                placeholder: "Enter a sentence to see it tokenized..."
+                },
+                probability: {
+                title: "Predictive Text & Probability",
+                desc: "Generative AI uses statistics to predict the most likely next token in a sequence. It analyzes your context to calculate the mathematical probability of what word comes next.",
+                scenarios: ["Artificial Intelligence is", "In science, a hypothesis", "The main cause of"]
+                },
+                prompting: {
+                title: "Prompt Engineering Lab",
+                desc: "Prompt engineering is about designing specific instructions to get optimal outputs. By defining a persona and format, you narrow down the AI's probabilistic choices.",
+                roles: [
+                    { value: "helpful assistant", label: "Helpful Assistant (Default)" },
+                    { value: "science teacher", label: "Science Teacher" },
+                    { value: "debate opponent", label: "Debate Opponent" }
+                ],
+                formats: [
+                    { value: "a short paragraph", label: "Short Paragraph (Default)" },
+                    { value: "a step-by-step guide", label: "Step-by-Step Guide" },
+                    { value: "a list of pros and cons", label: "Pros and Cons List" }
+                ]
+                }
+            },
+            advanced: {
+                label: "Ages 16+ (Advanced)",
+                tokenization: {
+                title: "Context Windows & Tokens",
+                desc: "Large Language Models (LLMs) map text to numerical token IDs. The way text is tokenized impacts how the model interprets syntax and semantics within its fixed context window.",
+                placeholder: "Input text for token array visualization..."
+                },
+                probability: {
+                title: "Autoregressive Generation",
+                desc: "LLMs are autoregressive—they generate text one token at a time based on a probability distribution over their entire vocabulary, conditioned on the preceding sequence.",
+                scenarios: ["The socio-economic impact of", "Quantum computing leverages", "To optimize a neural network"]
+                },
+                prompting: {
+                title: "Advanced Prompt Architecture",
+                desc: "Effective prompting involves framing the context to constrain the model's latent space. Role-playing and strict formatting instructions heavily weight the probability of desired outputs.",
+                roles: [
+                    { value: "expert consultant", label: "Expert Consultant" },
+                    { value: "software engineer", label: "Software Engineer" },
+                    { value: "academic researcher", label: "Academic Researcher" }
+                ],
+                formats: [
+                    { value: "an executive summary", label: "Executive Summary" },
+                    { value: "a structured markdown table", label: "Markdown Table" },
+                    { value: "a critical analysis", label: "Critical Analysis" }
+                ]
+                }
+            }
+        };
+
+        // Context to share learning level across components
+        const LearningLevelContext = createContext();
+
+        function AIPromptingLab() {
+            const [activeTab, setActiveTab] = useState('tokenization');
+            const [learningLevel, setLearningLevel] = useState('secondary'); // Default to middle tier
+
+            return (
+                <LearningLevelContext.Provider value={{ level: learningLevel, content: CONTENT_LEVELS[learningLevel] }}>
+                <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+                    <Header learningLevel={learningLevel} setLearningLevel={setLearningLevel} />
+                    
+                    <main className="max-w-6xl mx-auto px-4 py-8">
+                    <div className="flex flex-wrap justify-center gap-4 mb-12">
+                        <TabButton 
+                        active={activeTab === 'tokenization'} 
+                        onClick={() => setActiveTab('tokenization')}
+                        icon={<SplitSquareHorizontal size={20} />}
+                        title="1. Tokenization"
+                        />
+                        <TabButton 
+                        active={activeTab === 'probability'} 
+                        onClick={() => setActiveTab('probability')}
+                        icon={<Cpu size={20} />}
+                        title="2. Probability"
+                        />
+                        <TabButton 
+                        active={activeTab === 'prompting'} 
+                        onClick={() => setActiveTab('prompting')}
+                        icon={<Target size={20} />}
+                        title="3. Prompt Lab"
+                        />
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[600px]">
+                        {activeTab === 'tokenization' && <TokenizationExplorer />}
+                        {activeTab === 'probability' && <ProbabilityEngine />}
+                        {activeTab === 'prompting' && <PromptLab />}
+                    </div>
+                    </main>
+                </div>
+                </LearningLevelContext.Provider>
+            );
+        }
+
+        function Header({ learningLevel, setLearningLevel }) {
+            return (
+                <header className="bg-white border-b border-slate-200 py-4 px-4 sticky top-0 z-10">
+                <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 w-full lg:w-auto">
+                    <div className="bg-indigo-600 p-2 rounded-lg text-white flex-shrink-0">
+                        <Sparkles size={24} />
+                    </div>
+                    <div>
+                        <h1 className="text-xl md:text-2xl font-bold text-slate-800">AI as a Study Partner</h1>
+                        <p className="text-slate-500 text-sm font-medium">Lesson 1: Smart Prompting & Creative Inquiry</p>
+                    </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
+                    <div className="flex items-center gap-2 text-sm bg-slate-100 p-1 rounded-lg border border-slate-200">
+                        <GraduationCap size={16} className="text-slate-500 ml-2" />
+                        <select 
+                        value={learningLevel}
+                        onChange={(e) => setLearningLevel(e.target.value)}
+                        className="bg-transparent border-none text-slate-700 font-medium focus:ring-0 cursor-pointer py-1 pr-8 text-sm"
+                        style={{ appearance: 'none', paddingRight: '2rem' }}
+                        >
+                        {Object.entries(CONTENT_LEVELS).map(([key, data]) => (
+                            <option key={key} value={key}>{data.label}</option>
+                        ))}
+                        </select>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-2 text-sm text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full font-medium">
+                        <BookOpen size={16} />
+                        Interactive Lab
+                    </div>
+                    </div>
+                </div>
+                </header>
+            );
+        }
+
+        function TabButton({ active, onClick, icon, title }) {
+            return (
+                <button
+                onClick={onClick}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                    active 
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 scale-105' 
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-indigo-600'
+                }`}
+                >
+                {icon}
+                {title}
+                </button>
+            );
+        }
+
+        function TokenizationExplorer() {
+            const { content } = useContext(LearningLevelContext);
+            const [inputText, setInputText] = useState("");
+            const [tokens, setTokens] = useState([]);
+
+            // Set default text based on level, but only on initial mount or level change if empty
+            useEffect(() => {
+                if (!inputText) {
+                setInputText("Generative AI breaks text into smaller pieces called tokens.");
+                }
+            }, [content]);
+
+            // Simulate a simple tokenizer (words and punctuation)
+            useEffect(() => {
+                if (!inputText) {
+                setTokens([]);
+                return;
+                }
+                const regex = /([a-zA-Z]+|[0-9]+|[^\w\s]|\s+)/g;
+                const rawTokens = inputText.match(regex) || [];
+                
+                const processed = rawTokens.map((t, index) => {
+                if (t.trim() === '') {
+                    return { text: t, isSpace: true, id: index };
+                }
+                const fakeId = Math.floor(Math.random() * 50000) + 1000;
+                return { text: t, isSpace: false, id: fakeId };
+                });
+                setTokens(processed);
+            }, [inputText]);
+
+            return (
+                <div className="p-8 flex flex-col h-full animate-in fade-in duration-500">
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{content.tokenization.title}</h2>
+                    <p className="text-slate-600 text-lg max-w-3xl">
+                    {content.tokenization.desc}
+                    </p>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-8 shadow-inner">
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wider">
+                    Try it yourself
+                    </label>
+                    <textarea 
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    className="w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-lg resize-none outline-none"
+                    rows={3}
+                    placeholder={content.tokenization.placeholder}
+                    />
+                </div>
+
+                <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <SplitSquareHorizontal className="text-indigo-600" size={20} />
+                    The Resulting Tokens
+                    </h3>
+                    
+                    {tokens.length === 0 ? (
+                    <div className="text-slate-400 italic p-8 text-center border-2 border-dashed border-slate-200 rounded-xl">
+                        Awaiting text...
+                    </div>
+                    ) : (
+                    <div className="flex flex-wrap gap-2 p-4 bg-white border border-slate-200 rounded-xl">
+                        {tokens.map((token, index) => (
+                        token.isSpace ? (
+                            <span key={index} className="px-2 py-1 bg-slate-100 rounded text-slate-300 font-mono text-xs flex items-center border border-transparent">
+                            _
+                            </span>
+                        ) : (
+                            <div key={index} className="group relative flex flex-col items-center">
+                            <span className="px-3 py-2 bg-indigo-100 text-indigo-900 rounded-md font-mono text-lg border border-indigo-200 shadow-sm cursor-help transition-colors hover:bg-indigo-200">
+                                {token.text}
+                            </span>
+                            <div className="absolute -bottom-8 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 pointer-events-none">
+                                ID: {token.id}
+                            </div>
+                            </div>
+                        )
+                        ))}
+                    </div>
+                    )}
+                </div>
+
+                <div className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-5 flex gap-4 text-blue-800">
+                    <Info className="flex-shrink-0 mt-1" size={20} />
+                    <div>
+                    <h4 className="font-semibold mb-1">Why does this matter?</h4>
+                    <p className="text-sm text-blue-700/80">
+                        Because AI models have a limit on how many tokens they can process at once (the "context window"). 
+                        Also, when a model generates an answer, it's actually predicting the very next token, one by one! Hover over a word token above to see its hidden numerical ID.
+                    </p>
+                    </div>
+                </div>
+                </div>
+            );
+        }
+
+        function ProbabilityEngine() {
+            const { level, content } = useContext(LearningLevelContext);
+            const [sequence, setSequence] = useState("");
+            const [predictions, setPredictions] = useState([]);
+            
+            useEffect(() => {
+                setSequence(content.probability.scenarios[0]);
+            }, [content]);
+
+            const simulatePrediction = (text) => {
+                const lowerText = text.toLowerCase().trim();
+                let options = [];
+
+                if (lowerText.endsWith('the quick brown')) {
+                options = [
+                    { word: 'fox', prob: 92, color: 'bg-green-500' },
+                    { word: 'dog', prob: 5, color: 'bg-amber-500' },
+                    { word: 'bear', prob: 2, color: 'bg-red-500' },
+                    { word: 'cat', prob: 1, color: 'bg-red-500' },
+                ];
+                } else if (lowerText.endsWith('once upon a')) {
+                options = [
+                    { word: 'time', prob: 98, color: 'bg-green-500' },
+                    { word: 'midnight', prob: 1, color: 'bg-red-500' },
+                    { word: 'dream', prob: 0.8, color: 'bg-red-500' },
+                ];
+                } else if (lowerText.endsWith('my favourite animal is')) {
+                options = [
+                    { word: 'a', prob: 60, color: 'bg-green-500' },
+                    { word: 'the', prob: 25, color: 'bg-green-500' },
+                    { word: 'dog', prob: 10, color: 'bg-amber-500' },
+                ];
+                } else if (lowerText.endsWith('artificial')) {
+                options = [
+                    { word: 'intelligence', prob: 85, color: 'bg-green-500' },
+                    { word: 'flavor', prob: 8, color: 'bg-amber-500' },
+                    { word: 'light', prob: 5, color: 'bg-amber-500' },
+                ];
+                } else if (lowerText.endsWith('artificial intelligence is')) {
+                options = [
+                    { word: 'a', prob: 45, color: 'bg-green-500' },
+                    { word: 'the', prob: 30, color: 'bg-green-500' },
+                    { word: 'rapidly', prob: 15, color: 'bg-amber-500' },
+                ];
+                } else if (lowerText.endsWith('in science, a hypothesis')) {
+                options = [
+                    { word: 'is', prob: 80, color: 'bg-green-500' },
+                    { word: 'must', prob: 15, color: 'bg-amber-500' },
+                    { word: 'can', prob: 4, color: 'bg-red-500' },
+                ];
+                } else if (lowerText.endsWith('the main cause of')) {
+                options = [
+                    { word: 'global', prob: 35, color: 'bg-green-500' },
+                    { word: 'this', prob: 25, color: 'bg-green-500' },
+                    { word: 'death', prob: 10, color: 'bg-amber-500' },
+                ];
+                } else if (lowerText.endsWith('the socio-economic impact of')) {
+                options = [
+                    { word: 'climate', prob: 40, color: 'bg-green-500' },
+                    { word: 'artificial', prob: 30, color: 'bg-green-500' },
+                    { word: 'the', prob: 15, color: 'bg-amber-500' },
+                ];
+                } else if (lowerText.endsWith('quantum computing leverages')) {
+                options = [
+                    { word: 'quantum', prob: 65, color: 'bg-green-500' },
+                    { word: 'the', prob: 20, color: 'bg-green-500' },
+                    { word: 'principles', prob: 10, color: 'bg-amber-500' },
+                ];
+                } else if (lowerText.endsWith('to optimize a neural network')) {
+                options = [
+                    { word: ', ', prob: 45, color: 'bg-green-500' },
+                    { word: 'model', prob: 25, color: 'bg-green-500' },
+                    { word: 'architecture', prob: 15, color: 'bg-amber-500' },
+                ];
+                } else if (lowerText.length > 0) {
+                options = [
+                    { word: 'is', prob: 40, color: 'bg-green-500' },
+                    { word: 'and', prob: 30, color: 'bg-green-500' },
+                    { word: 'the', prob: 20, color: 'bg-amber-500' },
+                    { word: 'a', prob: 10, color: 'bg-red-500' },
+                ];
+                }
+
+                setPredictions(options);
+            };
+
+            useEffect(() => {
+                simulatePrediction(sequence);
+            }, [sequence]);
+
+            const handleSelectWord = (word) => {
+                setSequence(prev => prev + (word.startsWith(',') ? '' : ' ') + word);
+            };
+
+            return (
+                <div className="p-8 flex flex-col h-full animate-in fade-in duration-500">
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{content.probability.title}</h2>
+                    <p className="text-slate-600 text-lg max-w-3xl">
+                    {content.probability.desc}
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3 mb-6">
+                    {content.probability.scenarios.map(sc => (
+                    <button 
+                        key={sc}
+                        onClick={() => setSequence(sc)}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        Try: "{sc}"
+                    </button>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="flex flex-col">
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wider">
+                        Current Context (Your Prompt)
+                        </label>
+                        <button 
+                        onClick={() => setSequence("")}
+                        className="flex items-center gap-1 px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md transition-colors border border-slate-200"
+                        title="Clear context"
+                        >
+                        <RotateCcw size={14} />
+                        Clear
+                        </button>
+                    </div>
+                    <div className="flex-1 bg-white border-2 border-slate-200 rounded-xl p-6 text-xl font-serif text-slate-800 min-h-[200px] shadow-inner relative">
+                        {sequence}
+                        <span className="inline-block w-2 h-6 bg-indigo-500 animate-pulse ml-1 align-middle"></span>
+                        
+                        {sequence.length === 0 && (
+                        <span className="text-slate-400 absolute inset-0 p-6">Type something...</span>
+                        )}
+                    </div>
+                    <input 
+                        type="text"
+                        value={sequence}
+                        onChange={(e) => setSequence(e.target.value)}
+                        className="mt-4 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 w-full outline-none"
+                        placeholder="Edit context here..."
+                    />
+                    </div>
+
+                    <div className="flex flex-col">
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wider flex items-center justify-between">
+                        <span>AI Prediction for Next Word</span>
+                        <span className="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded">Click a word to add it</span>
+                    </label>
+                    
+                    <div className="flex-1 bg-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-center gap-4">
+                        {predictions.length > 0 ? predictions.map((pred, idx) => (
+                        <button 
+                            key={idx}
+                            onClick={() => handleSelectWord(pred.word)}
+                            className="group relative flex items-center w-full bg-slate-700/50 hover:bg-slate-700 p-3 rounded-lg transition-all border border-slate-600 hover:border-slate-400 text-left"
+                        >
+                            <div className="w-24 text-white font-mono text-lg font-bold">
+                            "{pred.word}"
+                            </div>
+                            <div className="flex-1 ml-4 h-4 bg-slate-900 rounded-full overflow-hidden">
+                            <div 
+                                className={`h-full ${pred.color} transition-all duration-1000 ease-out`}
+                                style={{ width: `${pred.prob}%` }}
+                            ></div>
+                            </div>
+                            <div className="w-16 text-right text-slate-300 font-mono text-sm ml-4">
+                            {pred.prob}%
+                            </div>
+                        </button>
+                        )) : (
+                        <div className="text-slate-400 text-center italic">
+                            Need more context to predict...
+                        </div>
+                        )}
+                    </div>
+                    </div>
+                </div>
+                </div>
+            );
+        }
+
+        function PromptLab() {
+            const { level, content } = useContext(LearningLevelContext);
+            const [topic, setTopic] = useState("");
+            const [role, setRole] = useState(content.prompting.roles[0].value);
+            const [format, setFormat] = useState(content.prompting.formats[0].value);
+            const [output, setOutput] = useState("");
+            const [isGenerating, setIsGenerating] = useState(false);
+
+            useEffect(() => {
+                setRole(content.prompting.roles[0].value);
+                setFormat(content.prompting.formats[0].value);
+                setOutput("");
+            }, [content]);
+
+            const generateResponse = () => {
+                setIsGenerating(true);
+                setOutput("");
+                
+                setTimeout(() => {
+                let score = 0;
+                if (topic.length > 5) score += 1;
+                if (role !== content.prompting.roles[0].value) score += 1;
+                if (format !== content.prompting.formats[0].value) score += 1;
+
+                let response = "";
+
+                if (topic.trim() === "") {
+                    response = "Please give me a topic to write about first!";
+                } else {
+                    if (level === 'primary') {
+                    if (score === 0) {
+                        response = `Here is something about ${topic}. It is very interesting.`;
+                    } else if (format.includes("poem")) {
+                        response = `(As a ${role})\n${topic} is super cool,\nWe learn about it in our school!\nIt's fun to know and fun to see,\nHow interesting it can be!`;
+                    } else {
+                        response = `Hello! I am a ${role}. You asked about ${topic}. It is a very cool subject that many people like to learn about.`;
+                    }
+                    } else if (level === 'secondary') {
+                    if (score === 0) {
+                        response = `Here is information about ${topic}. It is an important subject with many different areas to study.`;
+                    } else if (format.includes("pros and cons")) {
+                        response = `As a ${role}, here are pros and cons regarding ${topic}:\n\nPros:\n- Offers new perspectives\n- Drives innovation\n\nCons:\n- Can be complex to understand\n- Requires significant research`;
+                    } else {
+                        response = `Acting as a ${role}, let's look at ${topic}. When we format this as ${format}, we need to focus on the key details that make this subject relevant to our current studies.`;
+                    }
+                    } else {
+                    if (score === 0) {
+                        response = `The subject of ${topic} encompasses a broad range of theoretical and practical applications requiring deep analysis.`;
+                    } else if (format.includes("table")) {
+                        response = `| Aspect of ${topic} | Analysis (from perspective of ${role}) |\n|---|---|\n| Core Principle | Fundamental to modern understanding. |\n| Implementation | Requires rigorous methodology. |\n| Future Outlook | Highly dependent on continued research. |`;
+                    } else {
+                        response = `Assuming the persona of a ${role}, an examination of ${topic} formatted as ${format} reveals several critical insights. Primarily, the underlying mechanisms necessitate a nuanced approach to mitigate potential variables.`;
+                    }
+                    }
+                }
+                
+                setOutput(response);
+                setIsGenerating(false);
+                }, 1500);
+            };
+
+            return (
+                <div className="p-8 flex flex-col lg:flex-row h-full gap-8 animate-in fade-in duration-500">
+                <div className="flex-1 flex flex-col">
+                    <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{content.prompting.title}</h2>
+                    <p className="text-slate-600">
+                        {content.prompting.desc}
+                    </p>
+                    </div>
+
+                    <div className="bg-slate-50 border border-slate-200 p-6 rounded-xl space-y-6 flex-1 shadow-inner">
+                    
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 flex justify-between">
+                        1. The Topic (What)
+                        <span className="text-rose-500 text-xs font-normal">Required</span>
+                        </label>
+                        <input 
+                        type="text"
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        placeholder={level === 'primary' ? "e.g., Dinosaurs, Space..." : "e.g., The Water Cycle, Artificial Intelligence..."}
+                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 flex justify-between">
+                        2. The Role (Who)
+                        <span className="text-indigo-500 text-xs font-normal">Optional Context</span>
+                        </label>
+                        <select 
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white outline-none"
+                        >
+                        {content.prompting.roles.map(r => (
+                            <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 flex justify-between">
+                        3. The Format (How)
+                        <span className="text-indigo-500 text-xs font-normal">Optional Context</span>
+                        </label>
+                        <select 
+                        value={format}
+                        onChange={(e) => setFormat(e.target.value)}
+                        className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white outline-none"
+                        >
+                        {content.prompting.formats.map(f => (
+                            <option key={f.value} value={f.value}>{f.label}</option>
+                        ))}
+                        </select>
+                    </div>
+
+                    <div className="mt-6 bg-slate-800 text-slate-200 p-4 rounded-lg font-mono text-sm relative">
+                        <div className="absolute -top-3 left-4 bg-indigo-500 text-white text-xs px-2 py-1 rounded font-sans font-bold">
+                        Final Prompt Sent to AI
+                        </div>
+                        Act as a {role}. Please write {format} about {topic || "[missing topic]"}.
+                    </div>
+
+                    <button 
+                        onClick={generateResponse}
+                        disabled={isGenerating || !topic}
+                        className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                        {isGenerating ? (
+                        <span className="flex items-center gap-2">
+                            <Lightbulb className="animate-pulse" size={20} /> Generating...
+                        </span>
+                        ) : (
+                        <span className="flex items-center gap-2">
+                            <MessageSquareText size={20} /> Generate Output
+                        </span>
+                        )}
+                    </button>
+                    </div>
+                </div>
+
+                <div className="flex-1 flex flex-col">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <Sparkles className="text-indigo-600" size={20} />
+                    Simulated AI Output
+                    </h3>
+                    
+                    <div className="flex-1 border-2 border-slate-200 rounded-xl bg-white p-6 shadow-sm overflow-auto relative">
+                    {isGenerating ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+                        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <p>Analyzing context and probabilities...</p>
+                        </div>
+                    ) : output ? (
+                        <div className="prose prose-indigo max-w-none whitespace-pre-wrap font-serif text-lg text-slate-800">
+                        {output}
+                        </div>
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 italic">
+                        <ArrowRight size={48} className="mb-4 text-slate-300" />
+                        Build a prompt and click Generate to see the result.
+                        </div>
+                    )}
+                    </div>
+
+                    {output && !isGenerating && (
+                        <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 flex gap-3">
+                        <Lightbulb className="flex-shrink-0 text-green-600 mt-0.5" size={18} />
+                        <p>
+                            <strong>Notice:</strong> The more specific context you provided (Role and Format), the less the AI had to "guess" your intentions, resulting in an output closer to what you wanted.
+                        </p>
+                        </div>
+                    )}
+                </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AIPromptingLab />);
+    </script>
+</body>
+</html>
