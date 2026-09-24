@@ -521,29 +521,82 @@
                     options = [{ word: 'hyperparameters', prob: 50, color: 'bg-green-500' }, { word: 'learning', prob: 30, color: 'bg-green-500' }, { word: 'weights', prob: 15, color: 'bg-amber-500' }];
                 }
 
-                // --- 2. SMART CONTEXTUAL FALLBACKS (If exact sentence isn't mapped, fall back to endings) ---
-                else if (lowerText.endsWith('artificial intelligence') || lowerText.endsWith('intelligence')) {
-                    options = [{ word: 'is', prob: 65, color: 'bg-green-500' }, { word: 'has', prob: 20, color: 'bg-green-500' }];
-                } else if (lowerText.endsWith('powerful tool') || lowerText.endsWith('new technology')) {
-                    options = [{ word: 'for', prob: 60, color: 'bg-green-500' }, { word: 'that', prob: 30, color: 'bg-green-500' }];
-                } else if (lowerText.endsWith('tool for') || lowerText.endsWith('technology for')) {
-                    options = [{ word: 'solving', prob: 40, color: 'bg-green-500' }, { word: 'learning', prob: 30, color: 'bg-green-500' }];
-                } else if (lowerText.endsWith('solving complex')) {
-                    options = [{ word: 'problems', prob: 90, color: 'bg-green-500' }, { word: 'issues', prob: 8, color: 'bg-amber-500' }];
-                } else if (lowerText.endsWith('the')) {
-                    options = [{ word: 'most', prob: 25, color: 'bg-green-500' }, { word: 'best', prob: 15, color: 'bg-amber-500' }];
-                } else if (lowerText.endsWith('a') || lowerText.endsWith('an')) {
-                    options = [{ word: 'new', prob: 20, color: 'bg-green-500' }, { word: 'great', prob: 15, color: 'bg-amber-500' }];
-                } else if (lowerText.endsWith('is') || lowerText.endsWith('are') || lowerText.endsWith('was')) {
-                    options = [{ word: 'a', prob: 30, color: 'bg-green-500' }, { word: 'the', prob: 25, color: 'bg-green-500' }, { word: 'very', prob: 15, color: 'bg-amber-500' }];
-                } else if (lowerText.endsWith('in') || lowerText.endsWith('on') || lowerText.endsWith('at') || lowerText.endsWith('of') || lowerText.endsWith('for')) {
-                    options = [{ word: 'the', prob: 45, color: 'bg-green-500' }, { word: 'a', prob: 25, color: 'bg-green-500' }];
-                } else if (lowerText.endsWith('to')) {
-                    options = [{ word: 'be', prob: 30, color: 'bg-green-500' }, { word: 'make', prob: 20, color: 'bg-green-500' }];
-                } else if (lowerText.endsWith('and') || lowerText.endsWith('or') || lowerText.endsWith('but')) {
-                    options = [{ word: 'the', prob: 30, color: 'bg-green-500' }, { word: 'it', prob: 20, color: 'bg-green-500' }];
-                } else if (lowerText.length > 0) {
-                    options = [{ word: 'is', prob: 30, color: 'bg-green-500' }, { word: 'and', prob: 25, color: 'bg-green-500' }, { word: 'the', prob: 20, color: 'bg-amber-500' }, { word: 'of', prob: 15, color: 'bg-amber-500' }];
+                // --- 2. SMART CONTEXTUAL FALLBACKS (If exact sentence isn't mapped, fall back to grammar rules) ---
+                else {
+                    const words = lowerText.split(' ');
+                    const lastWord = words[words.length - 1];
+
+                    if (['the', 'this', 'that', 'my', 'your', 'their', 'our'].includes(lastWord)) {
+                        options = [
+                            { word: 'most', prob: 25, color: 'bg-green-500' },
+                            { word: 'best', prob: 20, color: 'bg-green-500' },
+                            { word: 'new', prob: 15, color: 'bg-amber-500' },
+                            { word: 'world', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    } else if (['a', 'an'].includes(lastWord)) {
+                        options = [
+                            { word: 'new', prob: 25, color: 'bg-green-500' },
+                            { word: 'great', prob: 20, color: 'bg-green-500' },
+                            { word: 'good', prob: 15, color: 'bg-amber-500' },
+                            { word: 'very', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    } else if (['is', 'are', 'was', 'were', 'be', 'been', 'being'].includes(lastWord)) {
+                        options = [
+                            { word: 'a', prob: 30, color: 'bg-green-500' },
+                            { word: 'the', prob: 25, color: 'bg-green-500' },
+                            { word: 'very', prob: 15, color: 'bg-amber-500' },
+                            { word: 'not', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    } else if (['in', 'on', 'at', 'with', 'by', 'for', 'about', 'from'].includes(lastWord)) {
+                        options = [
+                            { word: 'the', prob: 45, color: 'bg-green-500' },
+                            { word: 'a', prob: 25, color: 'bg-green-500' },
+                            { word: 'this', prob: 15, color: 'bg-amber-500' },
+                            { word: 'their', prob: 5, color: 'bg-red-500' },
+                        ];
+                    } else if (['to', 'can', 'will', 'should', 'would', 'could', 'must'].includes(lastWord)) {
+                        options = [
+                            { word: 'be', prob: 30, color: 'bg-green-500' },
+                            { word: 'make', prob: 20, color: 'bg-green-500' },
+                            { word: 'do', prob: 15, color: 'bg-amber-500' },
+                            { word: 'help', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    } else if (['and', 'but', 'or', 'so', 'because'].includes(lastWord)) {
+                        options = [
+                            { word: 'the', prob: 30, color: 'bg-green-500' },
+                            { word: 'it', prob: 20, color: 'bg-green-500' },
+                            { word: 'we', prob: 15, color: 'bg-amber-500' },
+                            { word: 'they', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    } else if (['i', 'we', 'you', 'they', 'he', 'she', 'it'].includes(lastWord)) {
+                        options = [
+                            { word: 'can', prob: 25, color: 'bg-green-500' },
+                            { word: 'will', prob: 20, color: 'bg-green-500' },
+                            { word: 'are', prob: 15, color: 'bg-amber-500' },
+                            { word: 'have', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    } else if (lastWord.endsWith('ing')) {
+                        options = [
+                            { word: 'the', prob: 35, color: 'bg-green-500' },
+                            { word: 'to', prob: 20, color: 'bg-amber-500' },
+                            { word: 'a', prob: 15, color: 'bg-amber-500' },
+                            { word: 'with', prob: 10, color: 'bg-red-500' },
+                        ];
+                    } else if (lastWord.endsWith('s') && lastWord.length > 3) {
+                        options = [
+                            { word: 'are', prob: 30, color: 'bg-green-500' },
+                            { word: 'can', prob: 20, color: 'bg-green-500' },
+                            { word: 'have', prob: 15, color: 'bg-amber-500' },
+                            { word: 'in', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    } else if (lastWord.length > 0) {
+                        options = [
+                            { word: 'is', prob: 25, color: 'bg-green-500' },
+                            { word: 'and', prob: 20, color: 'bg-green-500' },
+                            { word: 'to', prob: 15, color: 'bg-amber-500' },
+                            { word: 'the', prob: 10, color: 'bg-amber-500' },
+                        ];
+                    }
                 }
 
                 setPredictions(options);
@@ -598,20 +651,11 @@
                         Clear
                         </button>
                     </div>
-                    <div className="flex-1 bg-white border-2 border-slate-200 rounded-xl p-6 text-xl font-serif text-slate-800 min-h-[200px] shadow-inner relative">
-                        {sequence}
-                        <span className="inline-block w-2 h-6 bg-indigo-500 animate-pulse ml-1 align-middle"></span>
-                        
-                        {sequence.length === 0 && (
-                        <span className="text-slate-400 absolute inset-0 p-6">Type something...</span>
-                        )}
-                    </div>
-                    <input 
-                        type="text"
+                    <textarea 
                         value={sequence}
                         onChange={(e) => setSequence(e.target.value)}
-                        className="mt-4 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 w-full outline-none"
-                        placeholder="Edit context here..."
+                        className="flex-1 bg-white border-2 border-slate-200 rounded-xl p-6 text-xl font-serif text-slate-800 min-h-[200px] shadow-inner resize-none focus:ring-2 focus:ring-indigo-500 outline-none w-full"
+                        placeholder="Type your own sentence here to see how AI guesses..."
                     />
                     </div>
 
