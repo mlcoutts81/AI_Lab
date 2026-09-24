@@ -339,77 +339,211 @@
             }, [content]);
 
             const simulatePrediction = (text) => {
-                const lowerText = text.toLowerCase().trim();
+                const lowerText = text.toLowerCase().trim().replace(/\s+/g, ' ');
                 let options = [];
 
-                if (lowerText.endsWith('the quick brown')) {
-                options = [
-                    { word: 'fox', prob: 92, color: 'bg-green-500' },
-                    { word: 'dog', prob: 5, color: 'bg-amber-500' },
-                    { word: 'bear', prob: 2, color: 'bg-red-500' },
-                    { word: 'cat', prob: 1, color: 'bg-red-500' },
-                ];
-                } else if (lowerText.endsWith('once upon a')) {
-                options = [
-                    { word: 'time', prob: 98, color: 'bg-green-500' },
-                    { word: 'midnight', prob: 1, color: 'bg-red-500' },
-                    { word: 'dream', prob: 0.8, color: 'bg-red-500' },
-                ];
-                } else if (lowerText.endsWith('my favourite animal is')) {
-                options = [
-                    { word: 'a', prob: 60, color: 'bg-green-500' },
-                    { word: 'the', prob: 25, color: 'bg-green-500' },
-                    { word: 'dog', prob: 10, color: 'bg-amber-500' },
-                ];
-                } else if (lowerText.endsWith('artificial')) {
-                options = [
-                    { word: 'intelligence', prob: 85, color: 'bg-green-500' },
-                    { word: 'flavor', prob: 8, color: 'bg-amber-500' },
-                    { word: 'light', prob: 5, color: 'bg-amber-500' },
-                ];
-                } else if (lowerText.endsWith('artificial intelligence is')) {
-                options = [
-                    { word: 'a', prob: 45, color: 'bg-green-500' },
-                    { word: 'the', prob: 30, color: 'bg-green-500' },
-                    { word: 'rapidly', prob: 15, color: 'bg-amber-500' },
-                ];
-                } else if (lowerText.endsWith('in science, a hypothesis')) {
-                options = [
-                    { word: 'is', prob: 80, color: 'bg-green-500' },
-                    { word: 'must', prob: 15, color: 'bg-amber-500' },
-                    { word: 'can', prob: 4, color: 'bg-red-500' },
-                ];
-                } else if (lowerText.endsWith('the main cause of')) {
-                options = [
-                    { word: 'global', prob: 35, color: 'bg-green-500' },
-                    { word: 'this', prob: 25, color: 'bg-green-500' },
-                    { word: 'death', prob: 10, color: 'bg-amber-500' },
-                ];
-                } else if (lowerText.endsWith('the socio-economic impact of')) {
-                options = [
-                    { word: 'climate', prob: 40, color: 'bg-green-500' },
-                    { word: 'artificial', prob: 30, color: 'bg-green-500' },
-                    { word: 'the', prob: 15, color: 'bg-amber-500' },
-                ];
-                } else if (lowerText.endsWith('quantum computing leverages')) {
-                options = [
-                    { word: 'quantum', prob: 65, color: 'bg-green-500' },
-                    { word: 'the', prob: 20, color: 'bg-green-500' },
-                    { word: 'principles', prob: 10, color: 'bg-amber-500' },
-                ];
-                } else if (lowerText.endsWith('to optimize a neural network')) {
-                options = [
-                    { word: ', ', prob: 45, color: 'bg-green-500' },
-                    { word: 'model', prob: 25, color: 'bg-green-500' },
-                    { word: 'architecture', prob: 15, color: 'bg-amber-500' },
-                ];
+                // --- 1. FULL SENTENCE EXACT MATCHES (Highest Priority) ---
+                
+                // Artificial Intelligence Chain
+                if (lowerText === 'artificial') {
+                    options = [
+                        { word: 'intelligence', prob: 85, color: 'bg-green-500' },
+                        { word: 'flavor', prob: 8, color: 'bg-amber-500' },
+                        { word: 'light', prob: 5, color: 'bg-amber-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence') {
+                    options = [
+                        { word: 'is', prob: 65, color: 'bg-green-500' },
+                        { word: 'has', prob: 20, color: 'bg-green-500' },
+                        { word: 'can', prob: 10, color: 'bg-amber-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is') {
+                    options = [
+                        { word: 'a', prob: 45, color: 'bg-green-500' },
+                        { word: 'the', prob: 30, color: 'bg-green-500' },
+                        { word: 'rapidly', prob: 15, color: 'bg-amber-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is a') {
+                    options = [
+                        { word: 'powerful', prob: 35, color: 'bg-green-500' },
+                        { word: 'complex', prob: 25, color: 'bg-green-500' },
+                        { word: 'new', prob: 20, color: 'bg-amber-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is a powerful') {
+                    options = [
+                        { word: 'tool', prob: 50, color: 'bg-green-500' },
+                        { word: 'technology', prob: 30, color: 'bg-green-500' },
+                        { word: 'system', prob: 15, color: 'bg-amber-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is a powerful tool') {
+                    options = [
+                        { word: 'for', prob: 60, color: 'bg-green-500' },
+                        { word: 'that', prob: 30, color: 'bg-green-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is a powerful tool for') {
+                    options = [
+                        { word: 'solving', prob: 40, color: 'bg-green-500' },
+                        { word: 'learning', prob: 30, color: 'bg-green-500' },
+                        { word: 'business', prob: 20, color: 'bg-amber-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is a powerful tool for solving') {
+                    options = [
+                        { word: 'complex', prob: 70, color: 'bg-green-500' },
+                        { word: 'many', prob: 20, color: 'bg-green-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is a powerful tool for solving complex') {
+                    options = [
+                        { word: 'problems', prob: 90, color: 'bg-green-500' },
+                        { word: 'issues', prob: 8, color: 'bg-amber-500' },
+                    ];
+                } else if (lowerText === 'artificial intelligence is a powerful tool for solving complex problems') {
+                    options = [
+                        { word: '.', prob: 95, color: 'bg-green-500' },
+                        { word: 'in', prob: 4, color: 'bg-amber-500' },
+                    ];
+                }
+
+                // The Quick Brown Fox Chain
+                else if (lowerText === 'the quick brown') {
+                    options = [{ word: 'fox', prob: 92, color: 'bg-green-500' }, { word: 'dog', prob: 5, color: 'bg-amber-500' }, { word: 'bear', prob: 2, color: 'bg-red-500' }];
+                } else if (lowerText === 'the quick brown fox') {
+                    options = [{ word: 'jumps', prob: 85, color: 'bg-green-500' }, { word: 'leaps', prob: 10, color: 'bg-amber-500' }, { word: 'runs', prob: 5, color: 'bg-red-500' }];
+                } else if (lowerText === 'the quick brown fox jumps') {
+                    options = [{ word: 'over', prob: 95, color: 'bg-green-500' }, { word: 'across', prob: 3, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the quick brown fox jumps over') {
+                    options = [{ word: 'the', prob: 85, color: 'bg-green-500' }, { word: 'a', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the quick brown fox jumps over the') {
+                    options = [{ word: 'lazy', prob: 70, color: 'bg-green-500' }, { word: 'moon', prob: 20, color: 'bg-green-500' }, { word: 'fence', prob: 10, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the quick brown fox jumps over the lazy') {
+                    options = [{ word: 'dog', prob: 90, color: 'bg-green-500' }, { word: 'cat', prob: 8, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the quick brown fox jumps over the lazy dog') {
+                    options = [{ word: '.', prob: 98, color: 'bg-green-500' }];
+                }
+
+                // Once Upon A Time Chain
+                else if (lowerText === 'once upon a') {
+                    options = [{ word: 'time', prob: 98, color: 'bg-green-500' }, { word: 'midnight', prob: 1, color: 'bg-red-500' }];
+                } else if (lowerText === 'once upon a time') {
+                    options = [{ word: ',', prob: 95, color: 'bg-green-500' }, { word: 'there', prob: 4, color: 'bg-amber-500' }];
+                } else if (lowerText === 'once upon a time,') {
+                    options = [{ word: 'there', prob: 85, color: 'bg-green-500' }, { word: 'a', prob: 10, color: 'bg-amber-500' }];
+                } else if (lowerText === 'once upon a time, there') {
+                    options = [{ word: 'was', prob: 90, color: 'bg-green-500' }, { word: 'lived', prob: 10, color: 'bg-amber-500' }];
+                } else if (lowerText === 'once upon a time, there was' || lowerText === 'once upon a time, there lived') {
+                    options = [{ word: 'a', prob: 80, color: 'bg-green-500' }, { word: 'an', prob: 15, color: 'bg-green-500' }];
+                } else if (lowerText === 'once upon a time, there was a' || lowerText === 'once upon a time, there lived a') {
+                    options = [{ word: 'king', prob: 35, color: 'bg-green-500' }, { word: 'princess', prob: 30, color: 'bg-green-500' }, { word: 'little', prob: 25, color: 'bg-amber-500' }];
+                }
+
+                // My Favourite Animal Is Chain
+                else if (lowerText === 'my favourite animal is' || lowerText === 'my favorite animal is') {
+                    options = [{ word: 'a', prob: 60, color: 'bg-green-500' }, { word: 'the', prob: 25, color: 'bg-green-500' }, { word: 'dog', prob: 10, color: 'bg-amber-500' }];
+                } else if (lowerText === 'my favourite animal is a' || lowerText === 'my favorite animal is a') {
+                    options = [{ word: 'dog', prob: 40, color: 'bg-green-500' }, { word: 'cat', prob: 35, color: 'bg-green-500' }, { word: 'lion', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText === 'my favourite animal is the' || lowerText === 'my favorite animal is the') {
+                    options = [{ word: 'lion', prob: 30, color: 'bg-green-500' }, { word: 'elephant', prob: 25, color: 'bg-green-500' }, { word: 'tiger', prob: 20, color: 'bg-amber-500' }];
+                } else if (lowerText === 'my favourite animal is a dog' || lowerText === 'my favorite animal is a dog') {
+                    options = [{ word: 'because', prob: 65, color: 'bg-green-500' }, { word: 'and', prob: 25, color: 'bg-green-500' }];
+                } else if (lowerText === 'my favourite animal is a dog because' || lowerText === 'my favorite animal is a dog because') {
+                    options = [{ word: 'they', prob: 75, color: 'bg-green-500' }, { word: 'it', prob: 20, color: 'bg-green-500' }];
+                }
+
+                // Science Hypothesis Chain
+                else if (lowerText === 'in science, a hypothesis') {
+                    options = [{ word: 'is', prob: 80, color: 'bg-green-500' }, { word: 'must', prob: 15, color: 'bg-amber-500' }, { word: 'can', prob: 4, color: 'bg-red-500' }];
+                } else if (lowerText === 'in science, a hypothesis is') {
+                    options = [{ word: 'a', prob: 65, color: 'bg-green-500' }, { word: 'an', prob: 25, color: 'bg-green-500' }, { word: 'tested', prob: 5, color: 'bg-amber-500' }];
+                } else if (lowerText === 'in science, a hypothesis is a') {
+                    options = [{ word: 'testable', prob: 50, color: 'bg-green-500' }, { word: 'proposed', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText === 'in science, a hypothesis is an') {
+                    options = [{ word: 'educated', prob: 70, color: 'bg-green-500' }, { word: 'idea', prob: 20, color: 'bg-amber-500' }];
+                } else if (lowerText === 'in science, a hypothesis is an educated') {
+                    options = [{ word: 'guess', prob: 90, color: 'bg-green-500' }, { word: 'prediction', prob: 8, color: 'bg-amber-500' }];
+                } else if (lowerText === 'in science, a hypothesis is a testable') {
+                    options = [{ word: 'prediction', prob: 60, color: 'bg-green-500' }, { word: 'statement', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText === 'in science, a hypothesis is an educated guess' || lowerText === 'in science, a hypothesis is a testable prediction') {
+                    options = [{ word: 'that', prob: 85, color: 'bg-green-500' }, { word: '.', prob: 10, color: 'bg-amber-500' }];
+                }
+
+                // Main Cause Of Global Warming Chain
+                else if (lowerText === 'the main cause of') {
+                    options = [{ word: 'global', prob: 35, color: 'bg-green-500' }, { word: 'this', prob: 25, color: 'bg-green-500' }, { word: 'death', prob: 10, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the main cause of global') {
+                    options = [{ word: 'warming', prob: 70, color: 'bg-green-500' }, { word: 'climate', prob: 20, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the main cause of global warming') {
+                    options = [{ word: 'is', prob: 55, color: 'bg-green-500' }, { word: 'has', prob: 25, color: 'bg-green-500' }];
+                } else if (lowerText === 'the main cause of global warming is') {
+                    options = [{ word: 'greenhouse', prob: 45, color: 'bg-green-500' }, { word: 'the', prob: 30, color: 'bg-green-500' }, { word: 'human', prob: 20, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the main cause of global warming is greenhouse') {
+                    options = [{ word: 'gases', prob: 85, color: 'bg-green-500' }, { word: 'gas', prob: 10, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the main cause of global warming is the') {
+                    options = [{ word: 'release', prob: 40, color: 'bg-green-500' }, { word: 'increase', prob: 35, color: 'bg-green-500' }];
+                }
+
+                // Socio-economic Impact Chain
+                else if (lowerText === 'the socio-economic impact of') {
+                    options = [{ word: 'climate', prob: 40, color: 'bg-green-500' }, { word: 'artificial', prob: 30, color: 'bg-green-500' }, { word: 'the', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the socio-economic impact of climate') {
+                    options = [{ word: 'change', prob: 90, color: 'bg-green-500' }, { word: 'policies', prob: 5, color: 'bg-amber-500' }];
+                } else if (lowerText === 'the socio-economic impact of climate change') {
+                    options = [{ word: 'is', prob: 55, color: 'bg-green-500' }, { word: 'will', prob: 25, color: 'bg-green-500' }];
+                } else if (lowerText === 'the socio-economic impact of climate change is') {
+                    options = [{ word: 'profound', prob: 40, color: 'bg-green-500' }, { word: 'significant', prob: 35, color: 'bg-green-500' }, { word: 'a', prob: 15, color: 'bg-amber-500' }];
+                }
+
+                // Quantum Computing Chain
+                else if (lowerText === 'quantum computing leverages') {
+                    options = [{ word: 'quantum', prob: 65, color: 'bg-green-500' }, { word: 'the', prob: 20, color: 'bg-green-500' }, { word: 'principles', prob: 10, color: 'bg-amber-500' }];
+                } else if (lowerText === 'quantum computing leverages quantum') {
+                    options = [{ word: 'mechanics', prob: 60, color: 'bg-green-500' }, { word: 'physics', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText === 'quantum computing leverages quantum mechanics' || lowerText === 'quantum computing leverages quantum physics') {
+                    options = [{ word: 'to', prob: 70, color: 'bg-green-500' }, { word: 'and', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText === 'quantum computing leverages quantum mechanics to' || lowerText === 'quantum computing leverages quantum physics to') {
+                    options = [{ word: 'solve', prob: 50, color: 'bg-green-500' }, { word: 'process', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText === 'quantum computing leverages quantum mechanics to solve' || lowerText === 'quantum computing leverages quantum physics to solve') {
+                    options = [{ word: 'complex', prob: 60, color: 'bg-green-500' }, { word: 'problems', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText === 'quantum computing leverages quantum mechanics to solve complex' || lowerText === 'quantum computing leverages quantum physics to solve complex') {
+                    options = [{ word: 'problems', prob: 85, color: 'bg-green-500' }, { word: 'calculations', prob: 10, color: 'bg-amber-500' }];
+                }
+
+                // Neural Network Chain
+                else if (lowerText === 'to optimize a neural network') {
+                    options = [{ word: ',', prob: 45, color: 'bg-green-500' }, { word: 'model', prob: 25, color: 'bg-green-500' }, { word: 'architecture', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText === 'to optimize a neural network,') {
+                    options = [{ word: 'you', prob: 60, color: 'bg-green-500' }, { word: 'we', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText === 'to optimize a neural network, you' || lowerText === 'to optimize a neural network, we') {
+                    options = [{ word: 'must', prob: 50, color: 'bg-green-500' }, { word: 'can', prob: 30, color: 'bg-green-500' }, { word: 'need', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText === 'to optimize a neural network, you must' || lowerText === 'to optimize a neural network, you need' || lowerText === 'to optimize a neural network, we must') {
+                    options = [{ word: 'adjust', prob: 40, color: 'bg-green-500' }, { word: 'train', prob: 35, color: 'bg-green-500' }, { word: 'understand', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText === 'to optimize a neural network, you must adjust' || lowerText === 'to optimize a neural network, you need to adjust') {
+                    options = [{ word: 'the', prob: 60, color: 'bg-green-500' }, { word: 'its', prob: 25, color: 'bg-green-500' }];
+                } else if (lowerText === 'to optimize a neural network, you must adjust the' || lowerText === 'to optimize a neural network, you need to adjust the') {
+                    options = [{ word: 'hyperparameters', prob: 50, color: 'bg-green-500' }, { word: 'learning', prob: 30, color: 'bg-green-500' }, { word: 'weights', prob: 15, color: 'bg-amber-500' }];
+                }
+
+                // --- 2. SMART CONTEXTUAL FALLBACKS (If exact sentence isn't mapped, fall back to endings) ---
+                else if (lowerText.endsWith('artificial intelligence') || lowerText.endsWith('intelligence')) {
+                    options = [{ word: 'is', prob: 65, color: 'bg-green-500' }, { word: 'has', prob: 20, color: 'bg-green-500' }];
+                } else if (lowerText.endsWith('powerful tool') || lowerText.endsWith('new technology')) {
+                    options = [{ word: 'for', prob: 60, color: 'bg-green-500' }, { word: 'that', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText.endsWith('tool for') || lowerText.endsWith('technology for')) {
+                    options = [{ word: 'solving', prob: 40, color: 'bg-green-500' }, { word: 'learning', prob: 30, color: 'bg-green-500' }];
+                } else if (lowerText.endsWith('solving complex')) {
+                    options = [{ word: 'problems', prob: 90, color: 'bg-green-500' }, { word: 'issues', prob: 8, color: 'bg-amber-500' }];
+                } else if (lowerText.endsWith('the')) {
+                    options = [{ word: 'most', prob: 25, color: 'bg-green-500' }, { word: 'best', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText.endsWith('a') || lowerText.endsWith('an')) {
+                    options = [{ word: 'new', prob: 20, color: 'bg-green-500' }, { word: 'great', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText.endsWith('is') || lowerText.endsWith('are') || lowerText.endsWith('was')) {
+                    options = [{ word: 'a', prob: 30, color: 'bg-green-500' }, { word: 'the', prob: 25, color: 'bg-green-500' }, { word: 'very', prob: 15, color: 'bg-amber-500' }];
+                } else if (lowerText.endsWith('in') || lowerText.endsWith('on') || lowerText.endsWith('at') || lowerText.endsWith('of') || lowerText.endsWith('for')) {
+                    options = [{ word: 'the', prob: 45, color: 'bg-green-500' }, { word: 'a', prob: 25, color: 'bg-green-500' }];
+                } else if (lowerText.endsWith('to')) {
+                    options = [{ word: 'be', prob: 30, color: 'bg-green-500' }, { word: 'make', prob: 20, color: 'bg-green-500' }];
+                } else if (lowerText.endsWith('and') || lowerText.endsWith('or') || lowerText.endsWith('but')) {
+                    options = [{ word: 'the', prob: 30, color: 'bg-green-500' }, { word: 'it', prob: 20, color: 'bg-green-500' }];
                 } else if (lowerText.length > 0) {
-                options = [
-                    { word: 'is', prob: 40, color: 'bg-green-500' },
-                    { word: 'and', prob: 30, color: 'bg-green-500' },
-                    { word: 'the', prob: 20, color: 'bg-amber-500' },
-                    { word: 'a', prob: 10, color: 'bg-red-500' },
-                ];
+                    options = [{ word: 'is', prob: 30, color: 'bg-green-500' }, { word: 'and', prob: 25, color: 'bg-green-500' }, { word: 'the', prob: 20, color: 'bg-amber-500' }, { word: 'of', prob: 15, color: 'bg-amber-500' }];
                 }
 
                 setPredictions(options);
@@ -420,7 +554,12 @@
             }, [sequence]);
 
             const handleSelectWord = (word) => {
-                setSequence(prev => prev + (word.startsWith(',') ? '' : ' ') + word);
+                setSequence(prev => {
+                    const punctuation = [',', '.', '!', '?'];
+                    // Add space if there's previous text and the new word is NOT punctuation
+                    const needsSpace = prev.length > 0 && !punctuation.includes(word[0]);
+                    return prev + (needsSpace ? ' ' : '') + word;
+                });
             };
 
             return (
